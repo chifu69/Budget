@@ -263,6 +263,28 @@ def prepare_ocr(root: Path) -> None:
     )
 
 
+def restore_executable_bits(root: Path) -> None:
+    """GitHub source ZIP extraction does not preserve Unix executable bits.
+
+    Restore +x only for shebang scripts living in a bin directory. Actual's
+    browser build executes ./bin/package-browser directly, so this is required
+    on Linux/GitHub Actions after extracting the upstream ZIP.
+    """
+    restored = 0
+    for path in root.rglob("*"):
+        if not path.is_file() or "bin" not in path.parts:
+            continue
+        try:
+            with path.open("rb") as handle:
+                if handle.read(2) != b"#!":
+                    continue
+            path.chmod(path.stat().st_mode | 0o111)
+            restored += 1
+        except OSError:
+            continue
+    print(f"Permisos ejecutables restaurados: {restored}")
+
+
 def create_project(destination: Path, archive: Path | None, force: bool) -> None:
     if destination.exists():
         if not force:
@@ -283,6 +305,8 @@ def create_project(destination: Path, archive: Path | None, force: bool) -> None
         extracted = next((temp / "extract").iterdir())
         shutil.move(str(extracted), str(destination))
 
+    print("Restaurando permisos de scripts...")
+    restore_executable_bits(destination)
     print("Aplicando Budget Local...")
     apply_mod(destination)
     print("Preparando OCR local...")
