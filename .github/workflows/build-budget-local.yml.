@@ -1,0 +1,69 @@
+name: Build Budget Local
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.18.0'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Create Budget Local from official Actual v26.10.0
+        run: python3 BUDGET_LOCAL_IPHONE.py --dest actual-budget-local
+
+      - name: Install dependencies
+        working-directory: actual-budget-local
+        run: yarn install --immutable
+
+      - name: Typecheck
+        working-directory: actual-budget-local
+        run: yarn typecheck
+
+      - name: Build PWA
+        working-directory: actual-budget-local
+        run: yarn build:browser --skip-translations
+
+      - name: Package source
+        run: |
+          rm -rf actual-budget-local/.git
+          zip -qr Budget-Local-Source-v0.1.0.zip actual-budget-local
+
+      - name: Package PWA
+        working-directory: actual-budget-local/packages/desktop-client/build
+        run: zip -qr ../../../../Budget-Local-PWA-v0.1.0.zip .
+
+      - name: Upload source ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Budget-Local-Source-v0.1.0
+          path: Budget-Local-Source-v0.1.0.zip
+          if-no-files-found: error
+
+      - name: Upload PWA ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Budget-Local-PWA-v0.1.0
+          path: Budget-Local-PWA-v0.1.0.zip
+          if-no-files-found: error
