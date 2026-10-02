@@ -16,3 +16,6 @@ Base: Actual Budget v26.10.0.
 No database schema is modified in this version.
 No Actual financial formulas are modified in this version.
 No direct OCR-to-database write path is added.
+
+
+Flat iPhone edition: all customization source is embedded in BUDGET_LOCAL_IPHONE.py.
