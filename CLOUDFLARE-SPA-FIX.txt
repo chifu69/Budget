@@ -1,0 +1,26 @@
+Budget Local v0.2.2 — Cloudflare SPA routing fix
+
+Problem fixed:
+Cloudflare rejected Actual Budget's upstream _redirects rule:
+  /* /index.html 200
+with:
+  Infinite loop detected
+
+Fix:
+1. BUILD-CLOUDFLARE.sh removes only the incompatible _redirects file after build.
+2. wrangler.jsonc uses Cloudflare's native SPA routing:
+   "not_found_handling": "single-page-application"
+3. The required _headers file is kept intact, including COOP/COEP.
+
+Cloudflare settings:
+
+Build command:
+  bash BUILD-CLOUDFLARE.sh
+
+Deploy command:
+  npx wrangler deploy --config wrangler.jsonc
+
+Environment variable:
+  NODE_VERSION = 22.18.0
+
+No other Cloudflare settings need to change.
