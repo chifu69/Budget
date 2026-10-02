@@ -137,13 +137,13 @@ def apply_mod(root: Path) -> None:
         "  SvgCog,\n  SvgPiggyBank,\n",
         "quitar icono Bank Sync móvil",
     )
-    remove_once(nav, "import { useIsTestEnv } from '#hooks/useIsTestEnv';\n", "hook test móvil")
     remove_once(nav, "import { useSyncServerStatus } from '#hooks/useSyncServerStatus';\n", "hook sync móvil")
-    remove_once(
+    replace_once(
         nav,
         "  const syncServerStatus = useSyncServerStatus();\n"
         "  const isTestEnv = useIsTestEnv();\n"
         "  const isUsingServer = syncServerStatus !== 'no-server' || isTestEnv;\n",
+        "  const isTestEnv = useIsTestEnv();\n",
         "estado Bank Sync móvil",
     )
     replace_once(
