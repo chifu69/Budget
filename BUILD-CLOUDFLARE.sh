@@ -1,29 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "== Budget Local / Cloudflare Pages build =="
+echo "== Budget Local / Cloudflare build =="
 echo "Python: $(python3 --version)"
 echo "Node: $(node --version)"
-
-corepack enable
+echo "Corepack: $(corepack --version)"
 
 rm -rf actual-budget-local
 python3 BUDGET_LOCAL_IPHONE.py --dest actual-budget-local
 
 cd actual-budget-local
 
+echo "== Yarn through Corepack =="
+corepack yarn --version
+
 echo "== Installing dependencies =="
-yarn install --immutable
+corepack yarn install --immutable
 
 echo "== Typecheck =="
-yarn typecheck
+corepack yarn typecheck
 
 echo "== Building browser PWA =="
-yarn build:browser --skip-translations
+corepack yarn build:browser --skip-translations
 
 BUILD_DIR="packages/desktop-client/build"
 
-echo "== Verifying required production files =="
+echo "== Verifying production files =="
 test -f "$BUILD_DIR/index.html"
 test -f "$BUILD_DIR/_headers"
 test -f "$BUILD_DIR/_redirects"
@@ -35,5 +37,5 @@ grep -q "Cross-Origin-Opener-Policy: same-origin" "$BUILD_DIR/_headers"
 grep -q "Cross-Origin-Embedder-Policy: require-corp" "$BUILD_DIR/_headers"
 grep -q "/index.html" "$BUILD_DIR/_redirects"
 
-echo "== READY FOR CLOUDFLARE PAGES =="
-echo "Output directory: actual-budget-local/packages/desktop-client/build"
+echo "== READY FOR CLOUDFLARE =="
+echo "Assets: actual-budget-local/packages/desktop-client/build"
