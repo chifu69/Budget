@@ -38,11 +38,15 @@ def fail(message: str) -> None:
 
 def replace_once(path: Path, old: str, new: str, label: str) -> None:
     text = path.read_text(encoding="utf-8")
+    # Apply the replacement whenever the original block is still present.
+    # Only treat it as already patched when the original is gone and the
+    # replacement exists. This matters when `new` is a substring of `old`.
+    if old in text:
+        path.write_text(text.replace(old, new, 1), encoding="utf-8")
+        return
     if new in text:
         return
-    if old not in text:
-        fail(f"No encontré el bloque esperado para {label} en {path}")
-    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+    fail(f"No encontré el bloque esperado para {label} en {path}")
 
 
 def remove_once(path: Path, old: str, label: str) -> None:
