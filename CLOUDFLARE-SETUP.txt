@@ -1,0 +1,50 @@
+Budget Local v0.2.0 — Cloudflare Pages
+
+WHY CLOUDFLARE PAGES INSTEAD OF GITHUB PAGES
+Actual Budget's browser engine requires HTTPS plus these HTTP headers:
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+
+The upstream Actual Budget project already includes the correct _headers file
+and a SPA _redirects file. Cloudflare Pages honors both files on static builds.
+GitHub Pages does not provide a supported per-repository way to apply these
+required response headers, so it is not a good production target for this app.
+
+ONE-TIME CLOUDFLARE PAGES SETUP
+1. Keep this GitHub repo as your source:
+   https://github.com/chifu69/Budget
+
+2. In Cloudflare:
+   Workers & Pages -> Create -> Pages -> Connect to Git
+
+3. Connect GitHub and select:
+   chifu69/Budget
+
+4. Build settings:
+   Production branch: main
+   Build command: bash BUILD-CLOUDFLARE.sh
+   Build output directory:
+     actual-budget-local/packages/desktop-client/build
+   Root directory: leave blank
+
+5. Environment variable recommended:
+   NODE_VERSION = 22.18.0
+
+6. Save and Deploy.
+
+After that, every push to main can trigger a fresh Cloudflare Pages build.
+
+WHAT STAYS FREE/LOCAL
+- No OpenAI API required
+- No Firebase required
+- No Supabase required
+- Receipt OCR runs locally with Tesseract.js
+- Finance database remains local-first in the browser
+- Cloudflare Pages can be used on its free plan within its plan limits
+
+IPHONE INSTALL
+After the Cloudflare deployment is green:
+1. Open the *.pages.dev URL in Safari.
+2. Share -> Add to Home Screen.
+3. Open Budget Local from the new icon.
+4. Test Smart Add -> Scan Receipt.
