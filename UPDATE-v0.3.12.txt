@@ -1,0 +1,71 @@
+Budget Local v0.3.12 — Same-Origin AI Proxy
+
+WHAT WE LEARNED
+- v0.3.10 and v0.3.11 build/deploy successfully.
+- The remaining "Load failed" happens at runtime in Safari.
+- Transformers.js has a documented class of failures when ONNX/model resources
+  are loaded cross-origin in an app using COEP: require-corp.
+- Budget Local must keep COEP: require-corp because Actual Budget relies on
+  cross-origin isolation / browser SQLite behavior.
+
+STRONGER FIX
+Budget Local now uses its own Cloudflare Worker as a same-origin streaming bridge.
+
+Browser requests:
+  /ort/ort-wasm-simd-threaded.jsep.mjs
+  /ort/ort-wasm-simd-threaded.jsep.wasm
+  /hf/onnx-community/Qwen3-0.6B-ONNX/...
+
+Worker streams from:
+  pinned jsDelivr ONNX Runtime Web
+  Hugging Face Qwen3 repository
+
+From Safari's point of view, ALL AI resources now come from the same
+budget.garza4169.workers.dev origin. This removes browser-side CORS/COEP from
+the AI download path.
+
+IMPORTANT
+- The Worker does not buffer the 570 MB model in RAM; it streams the response.
+- The Qwen repository is explicitly whitelisted; this is not an open proxy.
+- Only GET/HEAD are accepted.
+- Financial text is never sent through the proxy.
+- Model files are cached by the browser after download.
+- Qwen3 0.6B + q4f16 + WebGPU are unchanged.
+
+DIAGNOSTICS ADDED
+Smart Add now shows the exact stage:
+  Comprobando WebGPU
+  Comprobando Transformers.js
+  Comprobando ONNX WebGPU
+  Comprobando motor WASM
+  Comprobando conexión con Qwen
+  Iniciando descarga de Qwen
+
+So if something still fails we will know the exact layer instead of only
+seeing "Load failed".
+
+UPLOAD — THREE FILES CHANGED
+Replace/add:
+  BUDGET_LOCAL_IPHONE.py
+  BUILD-CLOUDFLARE.sh
+  worker.js
+  wrangler.jsonc
+
+NOTE: wrangler.jsonc IS changed in this release because the Worker proxy needs
+an ASSETS binding and worker-first routes for /hf/* and /ort/*.
+
+DO NOT
+- Do not clear Safari website data.
+- Do not uninstall the PWA.
+- Do not delete the budget.
+
+AFTER DEPLOYMENT
+Close Budget Local completely, reopen it, go to Smart Add, tap Enable Local AI,
+and watch the stage message.
+
+VALIDATION HERE
+- Python generator syntax: PASS
+- Same-origin Qwen proxy configuration: PASS
+- Same-origin ONNX proxy configuration: PASS
+- Worker streaming/no-buffer implementation present: PASS
+- Wrangler ASSETS binding + worker-first routes: PASS

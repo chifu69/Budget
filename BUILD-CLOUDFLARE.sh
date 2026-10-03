@@ -47,11 +47,10 @@ test -f "$BUILD_DIR/site.webmanifest"
 test -f "$BUILD_DIR/ocr/tesseract.min.js"
 test -f "$BUILD_DIR/ocr/worker.min.js"
 test -f "$BUILD_DIR/ai/transformers-4.3.0.min.js"
-test -f "$BUILD_DIR/ai/wasm/ort-wasm-simd-threaded.jsep.mjs"
-# Deliberately NOT hosted in Cloudflare:
-# ort-wasm-simd-threaded.jsep.wasm (~26.1 MB) exceeds the 25 MiB per-file limit.
-test ! -f "$BUILD_DIR/ai/wasm/ort-wasm-simd-threaded.jsep.wasm"
 test ! -f "$BUILD_DIR/_redirects"
+test -f "../worker.js"
+grep -q "QWEN_PREFIX" "../worker.js"
+grep -q "ORT_PREFIX" "../worker.js"
 
 grep -q "Cross-Origin-Opener-Policy: same-origin" "$BUILD_DIR/_headers"
 grep -q "Cross-Origin-Embedder-Policy: require-corp" "$BUILD_DIR/_headers"
