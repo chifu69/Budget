@@ -1,0 +1,39 @@
+Budget Local v0.3.10 — AI Deploy Fix
+
+ERRORS VERIFIED IN v0.3.9
+1. GitHub full typecheck passed.
+2. The browser/PWA build failed in vite-plugin-pwa / Workbox because the ONNX
+   Runtime WASM files were larger than Actual's 10 MiB precache limit.
+3. More importantly, the WebGPU JSEP WASM file is about 26.1 MB. Cloudflare
+   Workers Static Assets has a 25 MiB maximum for any single static asset, so
+   that file cannot be deployed there even if Workbox precaching is disabled.
+
+FIX
+- Keep Transformers.js same-origin.
+- Keep only the small ONNX JSEP .mjs loader same-origin:
+    /ai/wasm/ort-wasm-simd-threaded.jsep.mjs
+- Do NOT place the 26.1 MB JSEP WASM inside Cloudflare assets.
+- ONNX Runtime receives explicit split paths:
+    mjs  -> Budget Local /ai/wasm/...
+    wasm -> jsDelivr onnxruntime-web pinned version
+- Financial text is never sent to jsDelivr. The CDN only serves the runtime
+  binary.
+- Qwen3 0.6B, WebGPU and q4f16 remain unchanged.
+- Build assertions ensure the oversized WASM is absent from Cloudflare output.
+
+WHY THIS IS BETTER THAN RAISING WORKBOX LIMIT
+Increasing Workbox's 10 MiB precache limit would still not solve Cloudflare's
+25 MiB individual static asset limit. It would also force a large runtime binary
+into PWA precache, which is unnecessary on iPhone.
+
+UPLOAD
+Replace:
+  BUDGET_LOCAL_IPHONE.py
+  BUILD-CLOUDFLARE.sh
+
+wrangler.jsonc is unchanged.
+
+VALIDATION HERE
+- Python generator syntax: PASS
+- Split ONNX runtime path assertions: PASS
+- No oversized JSEP WASM included in Cloudflare asset verification.
