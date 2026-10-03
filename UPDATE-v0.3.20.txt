@@ -1,0 +1,53 @@
+Budget Local v0.3.20 — Clean Budget UI
+
+DESIGN
+The iPhone Budget tab is redesigned to follow the cleaner reference:
+- White/light interface instead of the dense dark Actual Budget table.
+- Month navigation centered at the top.
+- Monthly budget summary card.
+- Multi-category donut chart.
+- Monthly total and approximate budget per day.
+- Up to six leading budget categories with percentages and amounts.
+- Spent and remaining summary.
+- Clean category cards below.
+- Plan / Remain segmented control.
+
+PLAN MODE
+- Shows the monthly planned amount for every expense category.
+- Tap the amount pill to edit that category's budget.
+- Budget editing remains ONLY in the Budget tab.
+
+REMAIN MODE
+- Shows how much remains in each category.
+- Overspent categories are highlighted in red.
+- Each row still shows how much has been spent this month.
+
+DATA / ACTUAL BUDGET
+- Uses Actual Budget's real `envelope-budget-month` values.
+- Saves through Actual's official `budget/budget-amount` action.
+- Uses the selected month.
+- No budget data is copied to a second database.
+- No transaction or category data is deleted or rewritten.
+- The original Actual Budget screen remains unchanged on wider/desktop layouts.
+- Only the narrow/mobile `/budget` screen uses the clean Budget Local design.
+
+CLUTTER REDUCTION
+- Legacy empty `General` and `Bills (Flexible)` are hidden from this mobile UI.
+- Real categories such as Monthly subscription, mortgage, Shopping,
+  Self-Care, Health, Transport, Food, etc. remain available.
+- `Bills` / `Utilities` are displayed as the cleaner `Home Bills` label.
+
+FILES TO UPLOAD
+Replace:
+  BUDGET_LOCAL_IPHONE.py
+
+The other files are unchanged and included as backups.
+
+DO NOT clear Safari website data and do not uninstall the PWA.
+
+VALIDATION
+- Python generator syntax: PASS
+- New Budget page embedded: PASS
+- Actual budget save endpoint present: PASS
+- Donut + Plan/Remain UI present: PASS
+- TypeScript TSX parse check: PASS (module-resolution diagnostics ignored)
