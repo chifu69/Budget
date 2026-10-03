@@ -1,0 +1,29 @@
+Budget Local v0.3.6 — Cloudflare core integrity fix
+
+ERROR FOUND
+Cloudflare failed during @actual-app/web typecheck with many TS2306 errors:
+  packages/loot-core/src/shared/util.ts is not a module
+
+This was not a category/subcategory UI TypeScript error. The upstream Actual
+Budget shared/util.ts file was invalid after source extraction in that
+Cloudflare build. That single core file is imported throughout Actual, which is
+why dozens of unrelated files failed at once.
+
+FIX
+- The generator now verifies Actual's official shared/util.ts immediately after
+  extracting v26.10.0.
+- It requires the expected upstream exports, including amountToInteger and last.
+- If the extracted file is missing/truncated/invalid, it automatically restores
+  the official v26.10.0 file from Actual Budget's GitHub raw source.
+- BUILD-CLOUDFLARE.sh also checks util.ts before Yarn starts, so a future source
+  corruption fails early with a clear message rather than dozens of TS2306 errors.
+- All v0.3.5 UI features are preserved:
+  main categories, subcategories, budget progress, and floating Smart Add.
+
+UPLOAD
+Replace BOTH files in the root of chifu69/Budget:
+  BUDGET_LOCAL_IPHONE.py
+  BUILD-CLOUDFLARE.sh
+
+wrangler.jsonc is unchanged and is included only as backup.
+Cloudflare build/deploy settings do not change.

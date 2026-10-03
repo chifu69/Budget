@@ -9,6 +9,13 @@ echo "Corepack: $(corepack --version)"
 rm -rf actual-budget-local
 python3 BUDGET_LOCAL_IPHONE.py --dest actual-budget-local
 
+echo "== Verifying Actual core module =="
+UTIL_FILE="actual-budget-local/packages/loot-core/src/shared/util.ts"
+test -s "$UTIL_FILE"
+grep -q "export function amountToInteger" "$UTIL_FILE"
+grep -q "export function last" "$UTIL_FILE"
+echo "util.ts OK: $(wc -c < "$UTIL_FILE") bytes"
+
 cd actual-budget-local
 
 echo "== Yarn through Corepack =="

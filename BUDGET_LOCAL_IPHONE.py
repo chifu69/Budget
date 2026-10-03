@@ -14,6 +14,10 @@ from pathlib import Path
 UPSTREAM_TAG = "v26.10.0"
 UPSTREAM_VERSION = "26.10.0"
 ARCHIVE_URL = f"https://github.com/actualbudget/actual/archive/refs/tags/{UPSTREAM_TAG}.zip"
+UPSTREAM_UTIL_URL = (
+    f"https://raw.githubusercontent.com/actualbudget/actual/{UPSTREAM_TAG}/"
+    "packages/loot-core/src/shared/util.ts"
+)
 TESSERACT_JS = "6.0.1"
 TESSERACT_CORE = "6.1.2"
 LANG_DATA = "1.0.0"
@@ -67,7 +71,7 @@ def remove_once(path: Path, old: str, label: str) -> None:
 def download(url: str, destination: Path, label: str) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     print(f"Descargando {label}...")
-    request = urllib.request.Request(url, headers={"User-Agent": "Budget-Local-iPhone/0.3.5"})
+    request = urllib.request.Request(url, headers={"User-Agent": "Budget-Local-iPhone/0.3.6"})
     with urllib.request.urlopen(request, timeout=180) as response, destination.open("wb") as output:
         while True:
             chunk = response.read(1024 * 1024)
@@ -354,6 +358,52 @@ def prepare_ocr(root: Path) -> None:
     )
 
 
+
+def ensure_upstream_core_integrity(root: Path) -> None:
+    """Verify the Actual core utility module survived source ZIP extraction.
+
+    Cloudflare occasionally produced a zero/invalid util.ts after extracting the
+    GitHub source archive. TypeScript then reports TS2306 from dozens of files.
+    Repair only that official upstream file and verify its expected exports.
+    """
+
+    util_path = root / "packages/loot-core/src/shared/util.ts"
+
+    def is_valid(path: Path) -> bool:
+        if not path.exists() or path.stat().st_size < 10_000:
+            return False
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            return False
+        return (
+            "export function amountToInteger" in text
+            and "export function last" in text
+            and "export " in text
+        )
+
+    if is_valid(util_path):
+        print(f"Core util.ts verificado: {util_path.stat().st_size} bytes")
+        return
+
+    print("ADVERTENCIA: util.ts upstream inválido; restaurando copia oficial...")
+    repair_path = util_path.with_name("util.ts.repair")
+    repair_path.unlink(missing_ok=True)
+
+    download(
+        UPSTREAM_UTIL_URL,
+        repair_path,
+        f"Actual Budget {UPSTREAM_TAG} shared/util.ts",
+    )
+
+    if not is_valid(repair_path):
+        repair_path.unlink(missing_ok=True)
+        fail("No pude restaurar un util.ts upstream válido.")
+
+    repair_path.replace(util_path)
+    print(f"Core util.ts restaurado: {util_path.stat().st_size} bytes")
+
+
 def restore_executable_bits(root: Path) -> None:
     """GitHub source ZIP extraction does not preserve Unix executable bits.
 
@@ -398,6 +448,8 @@ def create_project(destination: Path, archive: Path | None, force: bool) -> None
 
     print("Restaurando permisos de scripts...")
     restore_executable_bits(destination)
+    print("Verificando integridad de Actual Budget...")
+    ensure_upstream_core_integrity(destination)
     print("Aplicando Budget Local...")
     apply_mod(destination)
     print("Preparando OCR local...")
