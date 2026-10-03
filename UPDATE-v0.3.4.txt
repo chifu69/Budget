@@ -1,0 +1,25 @@
+Budget Local v0.3.4 — Budget Progress
+
+Core behavior:
+- The Budget tab is now the only place where monthly category budgets are edited.
+- Quick category screens never edit a budget.
+- The keypad/check button is only for recording a transaction.
+- Expense category screens show a read-only progress bar:
+  spent amount + spent percentage on the left,
+  amount left + percentage left on the right.
+- Home expense cards show the amount spent, amount left/over, and a circular
+  progress ring around the category icon.
+- If a category has no budget, Home says "No budget" and the category screen
+  says to set it in Budget.
+- Overspending turns the relevant progress state red.
+- Income cards keep showing received income and do not use an expense budget ring.
+
+Important:
+The earlier accidental expense caused by using Set Now from the quick-entry
+screen is not automatically deleted. If Food still contains an accidental
+$300 transaction, delete that transaction once from Transactions/Budget.
+After that, with a $300 Food budget and $14.54 spent, the expected balance is
+$285.46.
+
+Upload BUDGET_LOCAL_IPHONE.py to the root of chifu69/Budget and replace it.
+Cloudflare settings stay unchanged.
