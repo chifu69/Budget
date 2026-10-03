@@ -1,0 +1,72 @@
+Budget Local v0.3.18 — Subcategory Breakdown + Monthly Report
+
+NEW: CATEGORY BREAKDOWN
+When a main category is opened, Budget Local now shows "Where it went" for the
+selected month.
+
+Example:
+  Monthly Subscription        $130
+  Netflix                      $20
+  Internet                     $65
+  iCloud                        $5
+  Phone                        $40
+
+The main category still owns the budget. Subcategories do NOT create Home cards
+or separate budgets.
+
+EVERY CENT REMAINS VISIBLE
+If a transaction belongs to the main category but has no subcategory, it is
+shown as:
+  Uncategorized                $XX
+
+This prevents the category total from hiding money that has not yet been
+classified.
+
+NEW: MONTHLY REPORT
+Home now has a "Monthly Report" button.
+
+The report uses the month already selected on Home, so to see July:
+  1. Move Home to July.
+  2. Tap Monthly Report.
+
+The report shows:
+- Total expenses for that month.
+- Total income for that month.
+- Every visible expense category.
+- Budget / left or over.
+- Subcategory amounts inside each category.
+- Uncategorized amount when necessary.
+- Income category totals.
+
+SUBCATEGORY TAG FORMAT
+New quick-entry selections use:
+  #sub:<subcategory>
+
+Budget Local still reads the older legacy tags such as:
+  #Netflix
+  #Internet
+
+so existing transactions are not lost.
+
+ONE SUBCATEGORY PER TRANSACTION
+Selecting a subcategory now replaces another known subcategory tag on that
+transaction instead of stacking several classifications.
+
+FILES TO UPLOAD
+Replace:
+  BUDGET_LOCAL_IPHONE.py
+
+The other files are unchanged and included as backup.
+
+DATA SAFETY
+- No Actual Budget database schema was changed.
+- Monthly budgets remain controlled only from Budget.
+- Existing transactions are not rewritten or deleted.
+- Existing local subcategory definitions remain in localStorage.
+- Do not clear Safari website data and do not uninstall the PWA.
+
+VALIDATION
+- Python generator syntax: PASS
+- Embedded Home report checks: PASS
+- Embedded category breakdown checks: PASS
+- Legacy + structured subcategory tag support: PASS
