@@ -1,0 +1,55 @@
+Budget Local v0.3.14 — Model From iPhone Files
+
+WHAT CHANGED
+The screenshot from v0.3.13 proves that even the smaller ~272 MB model still
+fails when Safari tries to obtain the large ONNX weights through normal web
+loading. So Budget Local now stops downloading the big model inside the PWA.
+
+NEW FLOW
+1. Download `model_q4f16.onnx` to the iPhone Files app.
+2. Open Budget Local -> Smart Add.
+3. Tap `Choose model from Files`.
+4. Select `model_q4f16.onnx`.
+5. Tap `Enable Local AI`.
+
+HOW IT WORKS
+- The big ONNX file remains in iPhone Files.
+- Budget Local receives the selected File object and gives it directly to
+  Transformers.js through a custom cache interface.
+- The 272 MB model is NOT downloaded again.
+- The 272 MB model is NOT duplicated into Safari CacheStorage/IndexedDB.
+- Small config/tokenizer files can still come through the same-origin Worker.
+- ONNX Runtime WebGPU assets still use the same-origin Worker.
+
+IMPORTANT IOS LIMITATION
+A PWA cannot keep unrestricted permanent access to an arbitrary Files path like
+a desktop app or Viejito on USB. After the PWA is fully terminated/restarted,
+iOS may require selecting the model file again. This design intentionally avoids
+copying 272 MB into Safari storage, because that was part of the failure path.
+
+MODEL EXPECTED
+File name:
+  model_q4f16.onnx
+
+Model:
+  onnx-community/SmolLM2-360M-Instruct-ONNX
+
+Approx size:
+  272 MB
+
+FILES TO UPLOAD
+Replace:
+  BUDGET_LOCAL_IPHONE.py
+
+BUILD-CLOUDFLARE.sh, worker.js and wrangler.jsonc are included as backups and
+are unchanged in behavior from v0.3.13.
+
+DO NOT
+- Do not clear Safari website data.
+- Do not uninstall the PWA.
+
+VALIDATION HERE
+- Python generator syntax: PASS
+- File-backed custom Transformers cache: PASS
+- Large model excluded from browser cache put(): PASS
+- Files picker UI: PASS
