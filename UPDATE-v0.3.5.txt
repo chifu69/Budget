@@ -1,0 +1,41 @@
+Budget Local v0.3.5 — Categories + Subcategories + Floating Smart Add
+
+MAIN CATEGORY RULES
+- A real main category gets its own Home card.
+- Home uses exact category matching now. Mortgage no longer gets swallowed by Home Bills.
+- Example:
+    Bills -> Home Bills card
+    Mortgage -> its own Mortgage card
+- Real custom expense/income categories with budget/activity also appear as cards automatically.
+- Old empty defaults such as General and Bills (Flexible) are kept out of the Home card grid.
+
+SUBCATEGORY RULES
+- A subcategory does NOT create another Home card.
+- Use Home -> + Category / Subcategory.
+- Choose:
+    Subcategory -> assign it under a parent card
+    New Home Card -> create a real Actual category
+- Example:
+    Hair Cut -> Subcategory -> Self-Care
+  Hair Cut then appears inside Self-Care and its transaction is still saved against Self-Care,
+  so it subtracts from the Self-Care monthly budget.
+- Every quick-category screen has a "⚙ Subcategories" manager.
+- Custom subcategories are stored locally on this device in browser localStorage.
+- If a suggested subcategory name already exists as a real main category (for example Mortgage),
+  that suggestion is hidden from the parent category so it is not duplicated.
+
+BUDGET RULE
+- Budget remains the only place to edit monthly budget amounts.
+- Home cards and quick category screens only display budget progress / remaining amount.
+- The keypad/check action records transactions only.
+
+SMART ADD
+- Smart Add is now a floating button centered above the bottom navigation.
+- It stays available from Home, Account, Transactions, Budget and Setting.
+- The old Smart Add button inside the Home content was removed.
+
+UPDATE
+Upload BUDGET_LOCAL_IPHONE.py to the root of chifu69/Budget and replace the existing file.
+Cloudflare settings do not change.
+
+Existing data is preserved.
