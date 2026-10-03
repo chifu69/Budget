@@ -1,0 +1,47 @@
+Budget Local v0.3.11 — Safari WebGPU 4.3 Fix
+
+ROOT CAUSE FOUND
+Transformers.js 4.2.0 did NOT yet enable the new WebGPU backend for Safari 26+.
+Hugging Face's 4.3.0 release specifically includes:
+  "Enable WebGPU for Safari 26 and above"
+
+That matches the runtime symptom on iPhone: the app and Cloudflare build were
+healthy, but enabling Local AI still failed in Safari.
+
+FIX
+- Upgrade Transformers.js:
+    4.2.0 -> 4.3.0
+- Upgrade to the exact ONNX Runtime Web version used by Transformers.js 4.3.0:
+    1.31.0-dev.20260914-8d85527a0
+- Keep Qwen3 0.6B + q4f16.
+- Keep the oversized JSEP WASM outside Cloudflare and fetch it from pinned jsDelivr.
+- Version the same-origin Transformers runtime filename:
+    /ai/transformers-4.3.0.min.js
+  This prevents Safari/PWA module cache from reusing the old 4.2 runtime.
+- Version the JSEP loader URL as well.
+- Add navigator.gpu.requestAdapter() preflight before downloading Qwen.
+- Explicitly enable Transformers.js WASM cache for the split mjs/wasm runtime.
+- Improve runtime diagnostics for WebGPU/backend errors.
+
+NO FINANCIAL DATA CHANGES
+- Budgets and transactions are untouched.
+- Do not clear Safari website data.
+- Do not uninstall the PWA to apply this update.
+
+UPLOAD
+Replace:
+  BUDGET_LOCAL_IPHONE.py
+  BUILD-CLOUDFLARE.sh
+
+wrangler.jsonc is unchanged.
+
+AFTER CLOUDFLARE IS GREEN
+Close Budget Local completely and reopen it so the new PWA/service worker assets
+are used. Then Smart Add -> Enable Local AI.
+
+VALIDATION HERE
+- Python generator syntax: PASS
+- Transformers.js 4.3 pin: PASS
+- matching ONNX Runtime pin: PASS
+- Safari WebGPU adapter preflight: PASS
+- versioned runtime cache-bust: PASS

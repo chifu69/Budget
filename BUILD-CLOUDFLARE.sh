@@ -46,7 +46,7 @@ test -f "$BUILD_DIR/_headers"
 test -f "$BUILD_DIR/site.webmanifest"
 test -f "$BUILD_DIR/ocr/tesseract.min.js"
 test -f "$BUILD_DIR/ocr/worker.min.js"
-test -f "$BUILD_DIR/ai/transformers.min.js"
+test -f "$BUILD_DIR/ai/transformers-4.3.0.min.js"
 test -f "$BUILD_DIR/ai/wasm/ort-wasm-simd-threaded.jsep.mjs"
 # Deliberately NOT hosted in Cloudflare:
 # ort-wasm-simd-threaded.jsep.wasm (~26.1 MB) exceeds the 25 MiB per-file limit.
