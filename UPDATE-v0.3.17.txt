@@ -1,0 +1,68 @@
+Budget Local v0.3.17 — Hybrid AI Parser
+
+WHAT THE LAST TEST PROVED
+- Local AI reaches READY.
+- "Interpretar sin AI" works.
+- Therefore model loading/WebGPU/ONNX are no longer the main problem.
+- The weak point was asking a 135M model to create a strict 8-field JSON object.
+
+NEW DESIGN
+The working deterministic parser remains authoritative for:
+  amount
+  date
+  payee/merchant
+  account
+  basic income/expense detection
+
+SmolLM2 135M now has one small AI job:
+  choose category
+  choose subcategory
+  optionally confirm expense vs income
+
+The model receives the real Actual categories and valid subcategories and returns:
+  CATEGORY=...
+  SUBCATEGORY=...
+  TYPE=...
+
+The response parser is tolerant:
+- exact labels are preferred
+- category/subcategory names can also be recovered from free-form output
+- malformed AI output no longer destroys the otherwise-working parsed transaction
+
+LOCAL LEARNING
+If a user-confirmed merchant mapping exists, it is used immediately before
+running the model.
+
+ACCOUNT IMPROVEMENT
+The deterministic parser now recognizes phrases such as:
+  con Apple Card
+  with Chase card
+
+WHY THIS SHOULD BE MORE RELIABLE
+A 135M model is small enough for iPhone, but too small to be trusted as a
+general structured transaction parser. Classification is a much narrower task
+and is exactly where it adds value over "Interpretar sin AI".
+
+FILES TO UPLOAD
+Replace:
+  BUDGET_LOCAL_IPHONE.py
+
+worker.js, BUILD-CLOUDFLARE.sh and wrangler.jsonc are unchanged and included as backups.
+
+TEST AFTER DEPLOYMENT
+Use:
+  Kroger 42.87 groceries con Apple Card hoy
+
+Expected:
+  Amount: 42.87      <- deterministic parser
+  Merchant: Kroger   <- deterministic parser
+  Account: Apple Card <- deterministic parser
+  Date: today        <- deterministic parser
+  Category: Food & Drink <- AI classifier
+  Subcategory: Groceries <- AI classifier
+
+VALIDATION HERE
+- Python generator syntax: PASS
+- Hybrid deterministic + AI classifier: PASS
+- AI output no longer requires JSON: PASS
+- Merchant-memory fast path: PASS
