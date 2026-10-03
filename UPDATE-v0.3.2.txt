@@ -1,0 +1,13 @@
+Budget Local v0.3.2 — Quick Category build fix
+
+Problem found in v0.3.1:
+- TypeScript failed in QuickCategoryPage.tsx because Actual Budget v26.10.0
+  does not export SvgNotes from @actual-app/components/icons/v1.
+
+Fix:
+- Removed the invalid SvgNotes import.
+- Replaced that toolbar icon with a local note emoji.
+- No database or behavior changes.
+
+Upload the files to the root of chifu69/Budget and replace the existing ones.
+Cloudflare settings remain unchanged.
