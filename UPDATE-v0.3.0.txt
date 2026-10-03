@@ -1,0 +1,39 @@
+Budget Local v0.3.0 — UI v2
+
+WHAT CHANGED
+- New Home dashboard inspired by the supplied reference:
+  - month selector with previous/next
+  - Expense total
+  - 6 pastel expense cards
+  - Income total
+  - 3 pastel income cards
+  - Smart Add button
+- New fixed 5-tab mobile navigation:
+  Home | Account | Transactions | Budget | Setting
+- Transactions opens Actual's existing All Accounts transaction list.
+- Welcome screen rebranded to Budget Local.
+- Removed Try the demo and Connect to a sync server from welcome.
+- Removed the bottom Set up sync/server bar from the local onboarding.
+- Smart Add + local receipt OCR are preserved.
+- Actual Budget remains the financial/database engine underneath.
+
+IPHONE / GITHUB UPDATE
+Upload these three files to the ROOT of chifu69/Budget and replace existing files:
+  BUDGET_LOCAL_IPHONE.py
+  BUILD-CLOUDFLARE.sh
+  wrangler.jsonc
+
+Cloudflare is already connected to main, so the GitHub commit should trigger a new build automatically.
+
+Cloudflare settings remain:
+Build command:
+  bash BUILD-CLOUDFLARE.sh
+Deploy command:
+  npx wrangler deploy --config wrangler.jsonc
+NODE_VERSION:
+  22.18.0
+
+NOTES
+- The visual cards map to existing Actual categories by common names.
+- If a matching category does not exist, that card shows $0 and opens Budget when tapped.
+- No migration or database schema changes are made in this update.
