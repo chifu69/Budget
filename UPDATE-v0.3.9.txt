@@ -1,0 +1,47 @@
+Budget Local v0.3.9 — Safari WebGPU Load Fix
+
+PROBLEM FOUND
+Smart Add showed:
+  CHECK
+  Load failed
+
+The v0.3.8 deployment included Transformers.js itself, but the self-hosted
+Transformers.js WebGPU runtime also needs ONNX Runtime Web companion backend
+files (.mjs + .wasm). WebGPU uses the JSEP runtime. Safari can report the very
+generic "Load failed" when that dynamic backend module is missing/unreachable.
+
+FIX
+- Pin ONNX Runtime Web to the version bundled with Transformers.js 4.2.0:
+    1.26.0-dev.20260416-b7804b056c
+- Vendor all relevant same-origin ONNX Runtime Web files under:
+    /ai/wasm/
+- Configure:
+    env.backends.onnx.wasm.wasmPaths = '/ai/wasm/'
+- Keep proxy disabled and one WASM thread for iPhone memory stability.
+- Add same-origin preflight checks before Qwen starts.
+- Improve the Safari error so future backend-load failures are specific instead
+  of only "Load failed".
+- Cloudflare build now verifies every required ONNX Runtime WebGPU/WASM asset.
+
+QWEN MODEL
+- Qwen3 0.6B remains unchanged.
+- WebGPU + q4f16 remains unchanged.
+- The ~570 MB model is still downloaded only when Local AI is enabled and
+  cached by the browser; it is not bundled into Cloudflare.
+
+UPLOAD
+Replace BOTH:
+  BUDGET_LOCAL_IPHONE.py
+  BUILD-CLOUDFLARE.sh
+
+wrangler.jsonc is unchanged.
+
+AFTER CLOUDFLARE IS GREEN
+Do not clear Safari website data.
+Close Budget Local completely, reopen it, enter Smart Add and tap Enable Local AI.
+The first model download can take time because it is hundreds of MB.
+
+VALIDATION HERE
+- Python generator syntax: PASS
+- AI runtime path assertions: PASS
+- Cloudflare backend-asset checks included
