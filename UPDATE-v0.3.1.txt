@@ -1,0 +1,24 @@
+Budget Local v0.3.1 — Quick Category Screen
+
+Main fix:
+Tapping a Home category card no longer opens Actual's old category transaction list.
+
+New behavior:
+- Tap Food & Drink, Transport, Home Bills, Self-Care, Shopping, Health, Salary,
+  Freelance, or Investment -> opens a new Budget Local quick category screen.
+- X returns to Home.
+- Top-right list icon is the ONLY shortcut to the old detailed Actual category list.
+- Large amount entry with calculator-style keypad.
+- Shows this month's activity for the category.
+- Quick chips such as Breakfast, Lunch, Dinner, Snacks, Coffee and Groceries.
+- Note button.
+- Account selector.
+- Today shortcut.
+- Category selector for an unmapped dashboard card.
+- Set Now can save a monthly category budget using the entered amount.
+- Yellow check saves the transaction directly into Actual Budget and returns Home.
+- Expense entries are saved negative; income-category entries are saved positive.
+- Existing Actual database, Smart Add and OCR remain unchanged.
+
+Upload the four flat files to the root of chifu69/Budget and replace existing files.
+Cloudflare settings do not change.
