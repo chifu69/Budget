@@ -1,0 +1,52 @@
+Budget Local v0.3.13 — iPhone Local AI 272 MB
+
+WHY THE MODEL CHANGED
+The v0.3.12 screenshot proves:
+- WebGPU preflight passed.
+- Transformers.js loaded.
+- ONNX WebGPU module/WASM preflights passed.
+- Same-origin model proxy preflights passed.
+- Failure happens when Safari begins loading the large q4f16 Qwen model itself.
+
+Qwen3 0.6B q4f16 is about 570 MB.
+There is an open Transformers.js Examples issue where iPhone Safari reloads/fails
+while downloading large ONNX model files. There are also long-standing iOS
+memory-pressure reports for Transformers.js.
+
+For Smart Add we do not need a 570 MB reasoning LLM. The job is constrained JSON
+extraction/classification, so this build uses:
+  onnx-community/SmolLM2-360M-Instruct-ONNX
+  q4f16
+  about 272 MB
+
+This cuts the model download by roughly half while preserving:
+- WebGPU
+- local inference
+- same-origin Cloudflare Worker proxy
+- categories/subcategories context
+- merchant learning
+- receipt OCR + AI classification
+- review-before-save safety
+
+FILES
+Replace:
+  BUDGET_LOCAL_IPHONE.py
+  BUILD-CLOUDFLARE.sh
+  worker.js
+
+wrangler.jsonc is unchanged from v0.3.12 and is included as backup.
+
+DO NOT
+- Do not clear Safari website data.
+- Do not uninstall the PWA.
+
+AFTER DEPLOYMENT
+Close Budget Local completely, reopen it, then Smart Add -> Enable Local AI.
+The card should show:
+  SmolLM2 360M Instruct · WebGPU · q4f16 · ≈272 MB + tokenizer/runtime
+
+VALIDATION HERE
+- Python generator syntax: PASS
+- AI model ID: PASS
+- Worker whitelist: PASS
+- Existing same-origin proxy preserved

@@ -1,4 +1,4 @@
-const QWEN_PREFIX = '/hf/onnx-community/Qwen3-0.6B-ONNX/';
+const MODEL_PREFIX = '/hf/onnx-community/SmolLM2-360M-Instruct-ONNX/';
 const HF_ORIGIN = 'https://huggingface.co/';
 const ORT_PREFIX = '/ort/';
 const ORT_ORIGIN =
@@ -55,7 +55,7 @@ export default {
       return new Response('Method Not Allowed', { status: 405 });
     }
 
-    if (url.pathname.startsWith(QWEN_PREFIX)) {
+    if (url.pathname.startsWith(MODEL_PREFIX)) {
       // Whitelist only the public Qwen repository used by Budget Local.
       const relative = url.pathname.slice('/hf/'.length);
       const target = new URL(relative, HF_ORIGIN);

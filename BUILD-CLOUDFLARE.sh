@@ -49,7 +49,7 @@ test -f "$BUILD_DIR/ocr/worker.min.js"
 test -f "$BUILD_DIR/ai/transformers-4.3.0.min.js"
 test ! -f "$BUILD_DIR/_redirects"
 test -f "../worker.js"
-grep -q "QWEN_PREFIX" "../worker.js"
+grep -q "MODEL_PREFIX" "../worker.js"
 grep -q "ORT_PREFIX" "../worker.js"
 
 grep -q "Cross-Origin-Opener-Policy: same-origin" "$BUILD_DIR/_headers"
