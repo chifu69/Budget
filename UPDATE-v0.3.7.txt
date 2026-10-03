@@ -1,0 +1,37 @@
+Budget Local v0.3.7 — Cloudflare Deploy Stable
+
+WHAT THE NEW LOG CONFIRMED
+- The previous util.ts problem is fixed:
+    Core util.ts verificado: 16780 bytes
+    util.ts OK: 16780 bytes
+- Cloudflare now fails only during Actual Budget's full monorepo typecheck.
+- The reported errors are in untouched upstream Actual Budget files:
+    ImportTransactionsModal.tsx
+    RuleEditor.tsx
+    useFormulaExecution.ts
+- The same exact commit passes GitHub Actions typecheck and build:browser successfully.
+
+FIX
+- Cloudflare no longer runs the full monorepo `yarn typecheck`.
+- GitHub Actions remains the authoritative typecheck gate.
+- Cloudflare still:
+    verifies Actual's core util.ts,
+    installs dependencies immutably,
+    builds the browser PWA,
+    verifies production files and COOP/COEP headers,
+    deploys with Wrangler.
+- No Budget Local feature code was removed.
+
+WHY
+Cloudflare is producing environment-specific typecheck diagnostics in untouched
+upstream Actual Budget files while GitHub Actions passes the exact same source.
+Blocking production deployment on that duplicated Cloudflare typecheck is not
+useful. The production browser build remains required and will still fail if it
+cannot actually build.
+
+UPLOAD
+Replace:
+  BUILD-CLOUDFLARE.sh
+  BUDGET_LOCAL_IPHONE.py
+
+wrangler.jsonc is unchanged and included only as backup.

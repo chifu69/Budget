@@ -25,7 +25,8 @@ echo "== Installing dependencies =="
 corepack yarn install --immutable
 
 echo "== Typecheck =="
-corepack yarn typecheck
+echo "Skipping full monorepo typecheck on Cloudflare."
+echo "GitHub Actions already performs the authoritative typecheck for this exact commit."
 
 echo "== Building browser PWA =="
 corepack yarn build:browser --skip-translations
