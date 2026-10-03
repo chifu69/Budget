@@ -66,8 +66,8 @@ export default {
     if (url.pathname.startsWith(ORT_PREFIX)) {
       const filename = url.pathname.slice(ORT_PREFIX.length);
       const allowed = new Set([
-        'ort-wasm-simd-threaded.jsep.mjs',
-        'ort-wasm-simd-threaded.jsep.wasm',
+        'ort-wasm-simd-threaded.asyncify.mjs',
+        'ort-wasm-simd-threaded.asyncify.wasm',
       ]);
 
       if (!allowed.has(filename)) {

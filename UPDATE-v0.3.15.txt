@@ -1,0 +1,50 @@
+Budget Local v0.3.15 — ONNX Asyncify WebGPU Fix
+
+EXACT ERROR FIXED
+The iPhone reported:
+  no available backend found
+  TypeError: webgpuInit is not a function
+
+ROOT CAUSE
+Budget Local was forcing ONNX Runtime's JSEP factory:
+  ort-wasm-simd-threaded.jsep.mjs
+  ort-wasm-simd-threaded.jsep.wasm
+
+But Transformers.js 4.3 itself defaults to the ASYNCIFY ONNX Runtime factory
+on modern Safari/WebGPU:
+  ort-wasm-simd-threaded.asyncify.mjs
+  ort-wasm-simd-threaded.asyncify.wasm
+
+The mismatched JSEP factory did not expose the WebGPU initialization function
+that the bundled ONNX Runtime code expected, causing webgpuInit to be undefined.
+
+FIX
+- Switch same-origin ONNX runtime proxy paths from JSEP -> asyncify.
+- Update the Worker allowlist to stream only the matching asyncify files.
+- Keep Transformers.js 4.3.0.
+- Keep matching ONNX Runtime Web 1.31.0-dev.20260914-8d85527a0.
+- Keep SmolLM2 360M q4f16.
+- Keep direct model selection from iPhone Files.
+- No budget/transaction data changes.
+
+UPLOAD
+Replace:
+  BUDGET_LOCAL_IPHONE.py
+  worker.js
+
+BUILD-CLOUDFLARE.sh and wrangler.jsonc are unchanged and included as backup.
+
+AFTER DEPLOYMENT
+1. Close Budget Local completely.
+2. Reopen it.
+3. Smart Add -> Choose model from Files.
+4. Select model_q4f16.onnx.
+5. Enable Local AI.
+
+DO NOT clear Safari website data or uninstall the PWA.
+
+VALIDATION HERE
+- Python generator syntax: PASS
+- JSEP paths removed from AI runtime: PASS
+- Asyncify paths present: PASS
+- Worker allowlist updated: PASS
