@@ -1,0 +1,18 @@
+Budget Local v0.3.3 — Context-aware category screens
+
+Changes:
+- Each Home card now shows quick options related to that card.
+- Food & Drink: Breakfast, Lunch, Dinner, Snacks, Coffee, Groceries.
+- Transport: Gas, Parking, Public Transit, Tolls, Maintenance, Car Payment, Auto Insurance.
+- Home Bills: Mortgage, Rent, Electric, Gas (Home), Phone, Cable, Internet, Water.
+- Self-Care, Shopping, Health, Salary, Freelance and Investment all have their own related options.
+- The screen title always stays the dashboard category name (for example Home Bills or Transport).
+- If a dashboard category does not exist in Actual yet, Budget Local creates it automatically
+  inside the matching expense/income group when the card is opened.
+- No more forced "Choose category" dropdown for Transport or other unmapped Home cards.
+- Existing categories that already map correctly are preserved.
+- The top-right List button remains available for the detailed Actual transaction list.
+- Smart Add, local OCR, database format, Cloudflare config and existing transactions are unchanged.
+
+Upload BUDGET_LOCAL_IPHONE.py to the root of chifu69/Budget and replace the existing file.
+The other files are included only as backup and do not need Cloudflare setting changes.
