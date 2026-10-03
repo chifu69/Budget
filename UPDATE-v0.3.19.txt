@@ -1,0 +1,38 @@
+Budget Local v0.3.19 — Mobile Breakdown Layout Fix
+
+WHAT THE SCREENSHOT SHOWED
+The new subcategory breakdown was correct in content, but the quick-entry page
+was trying to fit the full breakdown, category chips, toolbar, and keypad into
+one iPhone-height flex layout. Safari compressed the breakdown rows on top of
+each other, producing the unreadable overlap shown in the screenshot.
+
+FIX
+- The quick-entry page now shows a compact "Where it went" preview.
+- It shows up to 4 subcategories with actual spending immediately.
+- "View full breakdown" opens a dedicated full-screen breakdown.
+- The full-screen view shows every configured subcategory, amount, transaction
+  count when applicable, and Uncategorized.
+- Zero-dollar subcategories remain visible in the full breakdown.
+- Quick-entry content is allowed to grow vertically instead of being squeezed.
+- Category chips, toolbar, and keypad are marked non-shrinking.
+- The large amount area was reduced from 360px minimum height to 285px to use
+  iPhone space more efficiently.
+- Home Monthly Report from v0.3.18 remains unchanged.
+
+DATA
+No transactions, budgets, categories, or subcategories are modified by this
+layout fix.
+
+UPLOAD
+Replace:
+  BUDGET_LOCAL_IPHONE.py
+
+The other files are unchanged and included as backup.
+
+DO NOT clear Safari website data or uninstall the PWA.
+
+VALIDATION
+- Python generator syntax: PASS
+- Compact breakdown preview: PASS
+- Full-screen breakdown overlay: PASS
+- Non-shrinking mobile controls: PASS
