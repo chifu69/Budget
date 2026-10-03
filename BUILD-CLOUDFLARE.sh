@@ -46,6 +46,7 @@ test -f "$BUILD_DIR/_headers"
 test -f "$BUILD_DIR/site.webmanifest"
 test -f "$BUILD_DIR/ocr/tesseract.min.js"
 test -f "$BUILD_DIR/ocr/worker.min.js"
+test -f "$BUILD_DIR/ai/transformers.min.js"
 test ! -f "$BUILD_DIR/_redirects"
 
 grep -q "Cross-Origin-Opener-Policy: same-origin" "$BUILD_DIR/_headers"
