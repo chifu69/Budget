@@ -1,0 +1,58 @@
+Budget Local v0.3.16 — iPhone 117 MB Local AI
+
+WHAT THE SAFARI CRASH MEANS
+The black Safari screen saying "A problem repeatedly occurred" is not a normal
+JavaScript exception. Safari's web process was terminated while loading the
+local model, which strongly points to iPhone memory pressure.
+
+The previous model:
+  SmolLM2 360M Instruct q4f16
+  ~272 MB ONNX
+
+Even when read from iPhone Files, Transformers.js still needs to materialize
+model bytes and create ONNX/WebGPU resources. That can temporarily consume much
+more RAM than the file size itself.
+
+NEW MODEL
+  onnx-community/SmolLM2-135M-Instruct-ONNX
+  onnx/model_q4f16.onnx
+  ~117 MB
+
+This reduces the model file by more than half again and also reduces inference
+memory requirements.
+
+OTHER MEMORY REDUCTIONS
+- max_new_tokens reduced to 80 (Smart Add only needs short JSON).
+- The model still stays in iPhone Files; Budget Local does not copy the 117 MB
+  model into Safari CacheStorage.
+- WebGPU + q4f16 remain enabled.
+- ONNX asyncify fix remains enabled.
+- Small tokenizer/config files still use the same-origin Worker proxy.
+- Financial data remains local.
+
+FILES TO UPLOAD
+Replace:
+  BUDGET_LOCAL_IPHONE.py
+  worker.js
+
+BUILD-CLOUDFLARE.sh and wrangler.jsonc are unchanged.
+
+MODEL FILE TO USE
+Download:
+  onnx-community/SmolLM2-135M-Instruct-ONNX
+  /onnx/model_q4f16.onnx
+Expected size:
+  ~117 MB
+
+IMPORTANT
+Delete or simply stop selecting the old 272 MB model. The new build validates
+the selected ONNX file size and will reject the old one.
+
+DO NOT clear Safari website data and do not uninstall the PWA.
+
+VALIDATION HERE
+- Python generator syntax: PASS
+- 135M model ID: PASS
+- 117 MB file-size validation: PASS
+- Worker whitelist: PASS
+- Existing asyncify/WebGPU fix preserved

@@ -1,4 +1,4 @@
-const MODEL_PREFIX = '/hf/onnx-community/SmolLM2-360M-Instruct-ONNX/';
+const MODEL_PREFIX = '/hf/onnx-community/SmolLM2-135M-Instruct-ONNX/';
 const HF_ORIGIN = 'https://huggingface.co/';
 const ORT_PREFIX = '/ort/';
 const ORT_ORIGIN =
