@@ -65,6 +65,8 @@ BUDGET_LOCAL_TRANSACTIONS_TSX = 'import React, { useEffect, useMemo, useState } 
 BUDGET_LOCAL_PROFILE_TS = "export type RecurringIncomeConfig = {\n  enabled: boolean;\n  amount: number;\n  anchorDate: string;\n  intervalDays: number;\n  autoSweep: boolean;\n};\n\nexport type BudgetLocalProfile = {\n  version: 1;\n  recurringIncome: RecurringIncomeConfig;\n  preferences: {\n    transactionView: 'record' | 'stats';\n  };\n  sync: {\n    provider: 'none' | 'apple' | 'google';\n    lastSyncedAt?: number;\n  };\n  updatedAt: number;\n};\n\nconst PROFILE_KEY = 'budget-local-profile-v1';\nconst LEGACY_RECURRING_KEY = 'budget-local-recurring-income-v1';\nexport const BUDGET_LOCAL_PROFILE_EVENT = 'budget-local-profile-updated';\n\nfunction todayString() {\n  const value = new Date();\n  const year = value.getFullYear();\n  const month = String(value.getMonth() + 1).padStart(2, '0');\n  const day = String(value.getDate()).padStart(2, '0');\n  return `${year}-${month}-${day}`;\n}\n\nfunction defaultRecurring(): RecurringIncomeConfig {\n  return {\n    enabled: false,\n    amount: 0,\n    anchorDate: todayString(),\n    intervalDays: 14,\n    autoSweep: true,\n  };\n}\n\nfunction defaultProfile(): BudgetLocalProfile {\n  return {\n    version: 1,\n    recurringIncome: defaultRecurring(),\n    preferences: {\n      transactionView: 'record',\n    },\n    sync: {\n      provider: 'none',\n    },\n    updatedAt: Date.now(),\n  };\n}\n\nfunction normalizeRecurring(\n  value: Partial<RecurringIncomeConfig> | null | undefined,\n): RecurringIncomeConfig {\n  return {\n    enabled: value?.enabled === true,\n    amount:\n      typeof value?.amount === 'number' && Number.isFinite(value.amount)\n        ? Math.max(0, value.amount)\n        : 0,\n    anchorDate:\n      typeof value?.anchorDate === 'string' && value.anchorDate\n        ? value.anchorDate\n        : todayString(),\n    intervalDays:\n      typeof value?.intervalDays === 'number' && value.intervalDays > 0\n        ? value.intervalDays\n        : 14,\n    autoSweep: value?.autoSweep !== false,\n  };\n}\n\nfunction migrateLegacy(profile: BudgetLocalProfile) {\n  try {\n    const legacyRaw = window.localStorage.getItem(LEGACY_RECURRING_KEY);\n    if (!legacyRaw) return profile;\n\n    const legacy = JSON.parse(legacyRaw) as Partial<RecurringIncomeConfig>;\n    const recurring = normalizeRecurring({\n      ...legacy,\n      enabled: legacy.enabled !== false,\n    });\n\n    if (recurring.amount <= 0) return profile;\n\n    const migrated: BudgetLocalProfile = {\n      ...profile,\n      recurringIncome: recurring,\n      updatedAt: Date.now(),\n    };\n    window.localStorage.setItem(PROFILE_KEY, JSON.stringify(migrated));\n    return migrated;\n  } catch {\n    return profile;\n  }\n}\n\nexport function readBudgetLocalProfile(): BudgetLocalProfile {\n  try {\n    const raw = window.localStorage.getItem(PROFILE_KEY);\n    if (!raw) {\n      return migrateLegacy(defaultProfile());\n    }\n\n    const parsed = JSON.parse(raw) as Partial<BudgetLocalProfile>;\n    return {\n      version: 1,\n      recurringIncome: normalizeRecurring(parsed.recurringIncome),\n      preferences: {\n        transactionView:\n          parsed.preferences?.transactionView === 'stats'\n            ? 'stats'\n            : 'record',\n      },\n      sync: {\n        provider:\n          parsed.sync?.provider === 'apple' || parsed.sync?.provider === 'google'\n            ? parsed.sync.provider\n            : 'none',\n        lastSyncedAt: parsed.sync?.lastSyncedAt,\n      },\n      updatedAt:\n        typeof parsed.updatedAt === 'number' ? parsed.updatedAt : Date.now(),\n    };\n  } catch {\n    return defaultProfile();\n  }\n}\n\nexport function writeBudgetLocalProfile(profile: BudgetLocalProfile) {\n  const next: BudgetLocalProfile = {\n    ...profile,\n    version: 1,\n    recurringIncome: normalizeRecurring(profile.recurringIncome),\n    updatedAt: Date.now(),\n  };\n  window.localStorage.setItem(PROFILE_KEY, JSON.stringify(next));\n  window.dispatchEvent(new Event(BUDGET_LOCAL_PROFILE_EVENT));\n  return next;\n}\n\nexport function saveRecurringIncomeConfig(config: RecurringIncomeConfig) {\n  const profile = readBudgetLocalProfile();\n  return writeBudgetLocalProfile({\n    ...profile,\n    recurringIncome: normalizeRecurring(config),\n  });\n}\n\nexport function setRecurringIncomeEnabled(enabled: boolean) {\n  const profile = readBudgetLocalProfile();\n  return writeBudgetLocalProfile({\n    ...profile,\n    recurringIncome: {\n      ...profile.recurringIncome,\n      enabled,\n    },\n  });\n}\n\nexport function saveTransactionView(view: 'record' | 'stats') {\n  const profile = readBudgetLocalProfile();\n  return writeBudgetLocalProfile({\n    ...profile,\n    preferences: {\n      ...profile.preferences,\n      transactionView: view,\n    },\n  });\n}\n"
 BUDGET_LOCAL_SETTINGS_TSX = 'import React, { useEffect, useState } from \'react\';\n\nimport { Text } from \'@actual-app/components/text\';\nimport { View } from \'@actual-app/components/view\';\n\nimport { useNavigate } from \'#hooks/useNavigate\';\n\nimport {\n  BUDGET_LOCAL_PROFILE_EVENT,\n  readBudgetLocalProfile,\n  saveRecurringIncomeConfig,\n  setRecurringIncomeEnabled,\n} from \'./budgetLocalProfile\';\n\nfunction Section({\n  title,\n  children,\n}: {\n  title: string;\n  children: React.ReactNode;\n}) {\n  return (\n    <View style={{ flexShrink: 0, gap: 9 }}>\n      <Text\n        style={{\n          paddingLeft: 4,\n          color: \'#8B8C94\',\n          fontSize: 10,\n          fontWeight: 900,\n          letterSpacing: \'0.08em\',\n        }}\n      >\n        {title}\n      </Text>\n      <View\n        style={{\n          flexShrink: 0,\n          borderRadius: 20,\n          backgroundColor: \'#FFFFFF\',\n          overflow: \'hidden\',\n          boxShadow: \'0 7px 22px rgba(42, 42, 60, 0.055)\',\n        }}\n      >\n        {children}\n      </View>\n    </View>\n  );\n}\n\nfunction SettingsRow({\n  icon,\n  title,\n  subtitle,\n  value,\n  onPress,\n  children,\n  last = false,\n}: {\n  icon: string;\n  title: string;\n  subtitle?: string;\n  value?: string;\n  onPress?: () => void;\n  children?: React.ReactNode;\n  last?: boolean;\n}) {\n  const content = (\n    <>\n      <span\n        aria-hidden\n        style={{\n          width: 40,\n          height: 40,\n          flexShrink: 0,\n          borderRadius: 14,\n          display: \'flex\',\n          alignItems: \'center\',\n          justifyContent: \'center\',\n          background: \'#F4F2FB\',\n          fontSize: 19,\n        }}\n      >\n        {icon}\n      </span>\n      <span style={{ flex: 1, minWidth: 0 }}>\n        <span style={{ display: \'block\', fontSize: 14, fontWeight: 900 }}>\n          {title}\n        </span>\n        {subtitle && (\n          <span\n            style={{\n              display: \'block\',\n              marginTop: 3,\n              color: \'#91929A\',\n              fontSize: 10,\n              lineHeight: 1.35,\n              fontWeight: 650,\n            }}\n          >\n            {subtitle}\n          </span>\n        )}\n      </span>\n      {value && (\n        <span\n          style={{\n            color: \'#777983\',\n            fontSize: 11,\n            fontWeight: 800,\n            whiteSpace: \'nowrap\',\n          }}\n        >\n          {value}\n        </span>\n      )}\n      {children}\n      {onPress && (\n        <span aria-hidden style={{ color: \'#A1A2AA\', fontSize: 20 }}>\n          ›\n        </span>\n      )}\n    </>\n  );\n\n  const style: React.CSSProperties = {\n    width: \'100%\',\n    minHeight: 68,\n    border: 0,\n    borderBottom: last ? 0 : \'1px solid #F0EFF4\',\n    background: \'#FFFFFF\',\n    padding: \'11px 14px\',\n    display: \'flex\',\n    alignItems: \'center\',\n    gap: 11,\n    color: \'#111116\',\n    textAlign: \'left\',\n    fontFamily: \'inherit\',\n  };\n\n  return onPress ? (\n    <button type="button" onClick={onPress} style={style}>\n      {content}\n    </button>\n  ) : (\n    <div style={style}>{content}</div>\n  );\n}\n\nexport function BudgetLocalSettings() {\n  const navigate = useNavigate();\n  const [profile, setProfile] = useState(() => readBudgetLocalProfile());\n  const recurring = profile.recurringIncome;\n  const [amount, setAmount] = useState(\n    recurring.amount > 0 ? String(recurring.amount) : \'2000\',\n  );\n  const [date, setDate] = useState(recurring.anchorDate);\n  const [interval, setInterval] = useState(recurring.intervalDays || 14);\n  const [autoSweep, setAutoSweep] = useState(recurring.autoSweep);\n  const [saved, setSaved] = useState(false);\n\n  useEffect(() => {\n    const refresh = () => {\n      const next = readBudgetLocalProfile();\n      setProfile(next);\n      const config = next.recurringIncome;\n      setAmount(config.amount > 0 ? String(config.amount) : \'2000\');\n      setDate(config.anchorDate);\n      setInterval(config.intervalDays || 14);\n      setAutoSweep(config.autoSweep);\n    };\n    window.addEventListener(BUDGET_LOCAL_PROFILE_EVENT, refresh);\n    return () =>\n      window.removeEventListener(BUDGET_LOCAL_PROFILE_EVENT, refresh);\n  }, []);\n\n  const toggleRecurring = (enabled: boolean) => {\n    const next = setRecurringIncomeEnabled(enabled);\n    setProfile(next);\n    setSaved(false);\n  };\n\n  const savePaycheck = () => {\n    const numeric = Number(amount.replace(/[$,\\s]/g, \'\'));\n    if (!Number.isFinite(numeric) || numeric <= 0 || !date) {\n      return;\n    }\n\n    const next = saveRecurringIncomeConfig({\n      enabled: true,\n      amount: numeric,\n      anchorDate: date,\n      intervalDays: interval,\n      autoSweep,\n    });\n    setProfile(next);\n    setSaved(true);\n    window.setTimeout(() => setSaved(false), 1800);\n  };\n\n  return (\n    <View\n      style={{\n        minHeight: \'100%\',\n        width: \'100%\',\n        flexShrink: 0,\n        backgroundColor: \'#F8F8FA\',\n        color: \'#111116\',\n        paddingTop: 20,\n        paddingLeft: 14,\n        paddingRight: 14,\n        paddingBottom: \'calc(env(safe-area-inset-bottom) + 220px)\',\n        boxSizing: \'border-box\',\n      }}\n    >\n      <View\n        style={{\n          width: \'100%\',\n          maxWidth: 760,\n          alignSelf: \'center\',\n          flexShrink: 0,\n          gap: 22,\n        }}\n      >\n        <View style={{ flexShrink: 0 }}>\n          <Text style={{ fontSize: 25, fontWeight: 950 }}>Settings</Text>\n          <Text\n            style={{\n              marginTop: 3,\n              color: \'#8B8C94\',\n              fontSize: 11,\n              fontWeight: 700,\n            }}\n          >\n            Budget Local preferences\n          </Text>\n        </View>\n\n        <Section title="PAYCHECK">\n          <SettingsRow\n            icon="💵"\n            title="Recurring Income"\n            subtitle="Track spending from each paycheck and sweep leftover to Piggy Bank."\n            last={!recurring.enabled}\n          >\n            <input\n              aria-label="Enable recurring income"\n              type="checkbox"\n              checked={recurring.enabled}\n              onChange={event => toggleRecurring(event.target.checked)}\n              style={{ width: 24, height: 24 }}\n            />\n          </SettingsRow>\n\n          {recurring.enabled && (\n            <View\n              style={{\n                flexShrink: 0,\n                padding: 14,\n                gap: 10,\n              }}\n            >\n              <View style={{ flexDirection: \'row\', gap: 9 }}>\n                <label style={{ flex: 1, display: \'grid\', gap: 4 }}>\n                  <span style={{ fontSize: 10, fontWeight: 800 }}>Amount</span>\n                  <input\n                    inputMode="decimal"\n                    value={amount}\n                    onChange={event => setAmount(event.target.value)}\n                    style={{\n                      minHeight: 44,\n                      border: \'1px solid #DEDEE5\',\n                      borderRadius: 13,\n                      padding: \'0 10px\',\n                      fontSize: 15,\n                      fontWeight: 800,\n                    }}\n                  />\n                </label>\n                <label style={{ flex: 1, display: \'grid\', gap: 4 }}>\n                  <span style={{ fontSize: 10, fontWeight: 800 }}>Payday</span>\n                  <input\n                    type="date"\n                    value={date}\n                    onChange={event => setDate(event.target.value)}\n                    style={{\n                      minHeight: 44,\n                      border: \'1px solid #DEDEE5\',\n                      borderRadius: 13,\n                      padding: \'0 8px\',\n                      fontSize: 12,\n                      fontWeight: 750,\n                    }}\n                  />\n                </label>\n              </View>\n\n              <label style={{ display: \'grid\', gap: 4 }}>\n                <span style={{ fontSize: 10, fontWeight: 800 }}>Frequency</span>\n                <select\n                  value={interval}\n                  onChange={event => setInterval(Number(event.target.value))}\n                  style={{\n                    minHeight: 44,\n                    border: \'1px solid #DEDEE5\',\n                    borderRadius: 13,\n                    padding: \'0 10px\',\n                    background: \'#FFFFFF\',\n                    fontSize: 13,\n                    fontWeight: 750,\n                  }}\n                >\n                  <option value={7}>Every week</option>\n                  <option value={14}>Every 2 weeks</option>\n                  <option value={28}>Every 4 weeks</option>\n                </select>\n              </label>\n\n              <label\n                style={{\n                  minHeight: 44,\n                  display: \'flex\',\n                  alignItems: \'center\',\n                  justifyContent: \'space-between\',\n                  gap: 10,\n                  borderRadius: 13,\n                  background: \'#F7F7F9\',\n                  padding: \'0 11px\',\n                }}\n              >\n                <span style={{ fontSize: 11, fontWeight: 800 }}>\n                  Auto sweep leftover to Piggy Bank\n                </span>\n                <input\n                  type="checkbox"\n                  checked={autoSweep}\n                  onChange={event => setAutoSweep(event.target.checked)}\n                  style={{ width: 22, height: 22 }}\n                />\n              </label>\n\n              <button\n                type="button"\n                onClick={savePaycheck}\n                style={{\n                  minHeight: 44,\n                  border: 0,\n                  borderRadius: 13,\n                  background: \'#4D4B91\',\n                  color: \'#FFFFFF\',\n                  fontSize: 12,\n                  fontWeight: 900,\n                }}\n              >\n                {saved ? \'Saved ✓\' : \'Save paycheck settings\'}\n              </button>\n            </View>\n          )}\n        </Section>\n\n        <Section title="BUDGET LOCAL">\n          <SettingsRow\n            icon="🧠"\n            title="Local AI"\n            subtitle="Smart Add and receipt classification stay on-device."\n            value="On-device"\n            onPress={() => void navigate(\'/smart-add\')}\n          />\n          <SettingsRow\n            icon="🧾"\n            title="Transactions"\n            subtitle="Calendar, monthly records and spending stats."\n            onPress={() => void navigate(\'/accounts/all\')}\n          />\n          <SettingsRow\n            icon="💳"\n            title="Accounts"\n            subtitle="Balances and account activity."\n            onPress={() => void navigate(\'/accounts\')}\n          />\n          <SettingsRow\n            icon="🟨"\n            title="Budget"\n            subtitle="Monthly category plans and remaining money."\n            onPress={() => void navigate(\'/budget\')}\n            last\n          />\n        </Section>\n\n        <Section title="SYNC & BACKUP">\n          <SettingsRow\n            icon="☁️"\n            title="Budget Local Sync"\n            subtitle="Your custom settings now live in one versioned profile, ready for Apple/Google account sync when the native app backend is connected."\n            value="Local for now"\n            last\n          />\n        </Section>\n\n        <Section title="ACTUAL BUDGET TOOLS">\n          <SettingsRow\n            icon="🏦"\n            title="Bank Sync"\n            onPress={() => void navigate(\'/bank-sync\')}\n          />\n          <SettingsRow\n            icon="🔁"\n            title="Schedules"\n            onPress={() => void navigate(\'/schedules\')}\n          />\n          <SettingsRow\n            icon="⚙️"\n            title="Rules"\n            onPress={() => void navigate(\'/rules\')}\n          />\n          <SettingsRow\n            icon="⋯"\n            title="Advanced Settings"\n            subtitle="Open the original Actual Budget settings."\n            onPress={() => void navigate(\'/settings/advanced\')}\n            last\n          />\n        </Section>\n\n        <View\n          aria-hidden\n          style={{\n            height: 220,\n            flexShrink: 0,\n            pointerEvents: \'none\',\n          }}\n        />\n      </View>\n    </View>\n  );\n}\n'
 
+BUDGET_LOCAL_ADVANCED_SETTINGS_TSX = 'import React from \'react\';\n\nimport { Text } from \'@actual-app/components/text\';\nimport { View } from \'@actual-app/components/view\';\n\nimport { useNavigate } from \'#hooks/useNavigate\';\n\nimport { Settings } from \'../settings\';\n\nexport function BudgetLocalAdvancedSettings() {\n  const navigate = useNavigate();\n\n  const close = () => {\n    void navigate(\'/settings\');\n  };\n\n  return (\n    <View\n      style={{\n        minHeight: \'100%\',\n        width: \'100%\',\n        flexShrink: 0,\n        backgroundColor: \'#F8F8FA\',\n        color: \'#111116\',\n        boxSizing: \'border-box\',\n        paddingBottom: \'calc(env(safe-area-inset-bottom) + 180px)\',\n      }}\n    >\n      <View\n        style={{\n          position: \'sticky\',\n          top: 0,\n          zIndex: 80,\n          flexShrink: 0,\n          flexDirection: \'row\',\n          alignItems: \'center\',\n          justifyContent: \'space-between\',\n          minHeight: 62,\n          padding:\n            \'calc(env(safe-area-inset-top) + 8px) 12px 10px\',\n          backgroundColor: \'rgba(248, 248, 250, 0.97)\',\n          backdropFilter: \'blur(16px)\',\n          WebkitBackdropFilter: \'blur(16px)\',\n          borderBottom: \'1px solid #ECEBF1\',\n        }}\n      >\n        <button\n          type="button"\n          onClick={close}\n          aria-label="Back to Budget Local Settings"\n          style={{\n            minWidth: 76,\n            minHeight: 40,\n            border: 0,\n            borderRadius: 13,\n            background: \'#F0EDFF\',\n            color: \'#4D4B91\',\n            padding: \'0 10px\',\n            fontSize: 12,\n            fontWeight: 900,\n            fontFamily: \'inherit\',\n          }}\n        >\n          ‹ Settings\n        </button>\n\n        <Text\n          style={{\n            flex: 1,\n            textAlign: \'center\',\n            fontSize: 18,\n            fontWeight: 950,\n          }}\n        >\n          Advanced Settings\n        </Text>\n\n        <button\n          type="button"\n          onClick={close}\n          aria-label="Close Advanced Settings"\n          style={{\n            width: 40,\n            height: 40,\n            flexShrink: 0,\n            border: 0,\n            borderRadius: 13,\n            background: \'#F1F1F4\',\n            color: \'#111116\',\n            fontSize: 24,\n            lineHeight: 1,\n            fontWeight: 700,\n            fontFamily: \'inherit\',\n          }}\n        >\n          ×\n        </button>\n      </View>\n\n      <View\n        style={{\n          width: \'100%\',\n          flexShrink: 0,\n        }}\n      >\n        <Settings />\n      </View>\n\n      <View\n        aria-hidden\n        style={{\n          height: 150,\n          flexShrink: 0,\n          pointerEvents: \'none\',\n        }}\n      />\n    </View>\n  );\n}\n'
+
 def fail(message: str) -> None:
     raise SystemExit(f"ERROR: {message}")
 
@@ -92,7 +94,7 @@ def remove_once(path: Path, old: str, label: str) -> None:
 def download(url: str, destination: Path, label: str) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     print(f"Descargando {label}...")
-    request = urllib.request.Request(url, headers={"User-Agent": "Budget-Local-iPhone/0.3.32"})
+    request = urllib.request.Request(url, headers={"User-Agent": "Budget-Local-iPhone/0.3.33"})
     with urllib.request.urlopen(request, timeout=180) as response, destination.open("wb") as output:
         while True:
             chunk = response.read(1024 * 1024)
@@ -185,6 +187,7 @@ def apply_mod(root: Path) -> None:
     (mobile_dir / "BudgetLocalTransactions.tsx").write_text(BUDGET_LOCAL_TRANSACTIONS_TSX, encoding="utf-8")
     (mobile_dir / "budgetLocalProfile.ts").write_text(BUDGET_LOCAL_PROFILE_TS, encoding="utf-8")
     (mobile_dir / "BudgetLocalSettings.tsx").write_text(BUDGET_LOCAL_SETTINGS_TSX, encoding="utf-8")
+    (mobile_dir / "BudgetLocalAdvancedSettings.tsx").write_text(BUDGET_LOCAL_ADVANCED_SETTINGS_TSX, encoding="utf-8")
 
     finances = root / "packages/desktop-client/src/components/FinancesApp.tsx"
     replace_once(
@@ -225,6 +228,13 @@ def apply_mod(root: Path) -> None:
         "import { BudgetLocalSettings } from './mobile/BudgetLocalSettings';\n"
         "import { BudgetLocalTransactions } from './mobile/BudgetLocalTransactions';\n",
         "import clean Settings page",
+    )
+    replace_once(
+        finances,
+        "import { BudgetLocalSettings } from './mobile/BudgetLocalSettings';\n",
+        "import { BudgetLocalAdvancedSettings } from './mobile/BudgetLocalAdvancedSettings';\n"
+        "import { BudgetLocalSettings } from './mobile/BudgetLocalSettings';\n",
+        "import mobile Advanced Settings wrapper",
     )
     remove_once(
         finances,
@@ -288,6 +298,12 @@ def apply_mod(root: Path) -> None:
     )
     replace_once(
         finances,
+        '                    <Route\n                      path="/settings/advanced/*"\n                      element={<Settings />}\n                    />\n',
+        '                    <Route\n                      path="/settings/advanced/*"\n                      element={\n                        isNarrowWidth ? (\n                          <BudgetLocalAdvancedSettings />\n                        ) : (\n                          <Settings />\n                        )\n                      }\n                    />\n',
+        "mobile Advanced Settings escape wrapper",
+    )
+    replace_once(
+        finances,
         '                  <Titlebar\n'
         '                    style={{\n'
         "                      WebkitAppRegion: 'drag',\n"
@@ -321,7 +337,7 @@ def apply_mod(root: Path) -> None:
         "                    location.pathname === '/accounts/all'\n"
         "                  )) && (\n",
         "                    location.pathname === '/accounts/all' ||\n"
-        "                    location.pathname === '/settings'\n"
+        "                    location.pathname.startsWith('/settings')\n"
         "                  )) && (\n",
         "extend clean Titlebar hide to Settings",
     )
@@ -340,7 +356,7 @@ def apply_mod(root: Path) -> None:
         finances,
         "                    location.pathname !== '/accounts/all' && (\n",
         "                    location.pathname !== '/accounts/all' &&\n"
-        "                    location.pathname !== '/settings' && (\n",
+        "                    !location.pathname.startsWith('/settings') && (\n",
         "extend mobile header hide to Settings",
     )
     replace_once(
@@ -378,7 +394,7 @@ def apply_mod(root: Path) -> None:
         "                      )\n"
         "                        ? 'calc(140px + env(safe-area-inset-bottom))'\n",
         "                        location.pathname === '/accounts/all' ||\n"
-        "                        location.pathname === '/settings'\n"
+        "                        location.pathname.startsWith('/settings')\n"
         "                      )\n"
         "                        ? 'calc(140px + env(safe-area-inset-bottom))'\n",
         "extend clean scroll padding to Settings",
@@ -389,7 +405,7 @@ def apply_mod(root: Path) -> None:
         "                      )\n"
         "                        ? 'calc(130px + env(safe-area-inset-bottom))'\n",
         "                        location.pathname === '/accounts/all' ||\n"
-        "                        location.pathname === '/settings'\n"
+        "                        location.pathname.startsWith('/settings')\n"
         "                      )\n"
         "                        ? 'calc(130px + env(safe-area-inset-bottom))'\n",
         "extend clean content padding to Settings",
@@ -459,6 +475,13 @@ def apply_mod(root: Path) -> None:
         '                  <Route path="/accounts/all" element={<MobileNavTabs />} />\n',
         "barra móvil Transactions",
     )
+    replace_once(
+        finances,
+        '                  <Route path="/settings" element={<MobileNavTabs />} />\n',
+        '                  <Route path="/settings" element={<MobileNavTabs />} />\n'
+        '                  <Route path="/settings/advanced/*" element={<MobileNavTabs />} />\n',
+        "mobile nav on Advanced Settings",
+    )
     remove_once(
         finances,
         "        <TourAutoOffer />\n",
@@ -519,7 +542,7 @@ def apply_mod(root: Path) -> None:
         "<BudgetLocalSettings />",
         "path=\"/settings/advanced/*\"",
         "location.pathname !== '/accounts/all'",
-        "location.pathname !== '/settings'",
+        "!location.pathname.startsWith('/settings')",
         "scrollPaddingBottom:",
         "calc(140px + env(safe-area-inset-bottom))",
     )
@@ -548,6 +571,9 @@ def apply_mod(root: Path) -> None:
     generated_settings = (mobile_dir / "BudgetLocalSettings.tsx").read_text(
         encoding="utf-8"
     )
+    generated_advanced_settings = (
+        mobile_dir / "BudgetLocalAdvancedSettings.tsx"
+    ).read_text(encoding="utf-8")
 
     required_budget_layout_tokens = (
         "flexShrink: 0",
@@ -600,6 +626,15 @@ def apply_mod(root: Path) -> None:
     ):
         if token not in generated_settings:
             fail("BudgetLocalSettings.tsx incompleto: " + token)
+
+    for token in (
+        "Back to Budget Local Settings",
+        "Close Advanced Settings",
+        "<Settings />",
+        "position: 'sticky'",
+    ):
+        if token not in generated_advanced_settings:
+            fail("BudgetLocalAdvancedSettings.tsx incompleto: " + token)
 
     for token in (
         "calendarCells",
