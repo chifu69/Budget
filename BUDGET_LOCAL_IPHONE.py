@@ -85,7 +85,7 @@ def remove_once(path: Path, old: str, label: str) -> None:
 def download(url: str, destination: Path, label: str) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     print(f"Descargando {label}...")
-    request = urllib.request.Request(url, headers={"User-Agent": "Budget-Local-iPhone/0.3.27"})
+    request = urllib.request.Request(url, headers={"User-Agent": "Budget-Local-iPhone/0.3.28"})
     with urllib.request.urlopen(request, timeout=180) as response, destination.open("wb") as output:
         while True:
             chunk = response.read(1024 * 1024)
@@ -112,9 +112,34 @@ def validate_patch_literals() -> None:
         "                      <MobilePageHeaderSlot />\n"
         "                    )}\n"
     )
+    upstream_scroll = (
+        "                    position: 'relative',\n"
+        "                  }}\n"
+        "                >\n"
+    )
+    expected_scroll = (
+        "                    position: 'relative',\n"
+        "                    scrollPaddingBottom:\n"
+        "                      isNarrowWidth && location.pathname === '/budget'\n"
+        "                        ? 'calc(120px + env(safe-area-inset-bottom))'\n"
+        "                        : undefined,\n"
+        "                    paddingBottom:\n"
+        "                      isNarrowWidth && location.pathname === '/budget'\n"
+        "                        ? 'calc(110px + env(safe-area-inset-bottom))'\n"
+        "                        : undefined,\n"
+        "                    boxSizing: 'border-box',\n"
+        "                  }}\n"
+        "                >\n"
+    )
 
-    if "\\\\n" in upstream_slot or "\\\\n" in expected_slot:
-        fail("Hay un \\\\n literal en el parche del MobilePageHeaderSlot.")
+    for label, value in (
+        ("MobilePageHeaderSlot old", upstream_slot),
+        ("MobilePageHeaderSlot new", expected_slot),
+        ("Budget scroller old", upstream_scroll),
+        ("Budget scroller new", expected_scroll),
+    ):
+        if "\\\\n" in value:
+            fail(f"Hay un \\\\n literal en {label}.")
 
 
 def apply_mod(root: Path) -> None:
@@ -235,21 +260,21 @@ def apply_mod(root: Path) -> None:
     )
     replace_once(
         finances,
-        "                    position: 'relative',\\n"
-        "                  }}\\n"
-        "                >\\n",
-        "                    position: 'relative',\\n"
-        "                    scrollPaddingBottom:\\n"
-        "                      isNarrowWidth && location.pathname === '/budget'\\n"
-        "                        ? 'calc(120px + env(safe-area-inset-bottom))'\\n"
-        "                        : undefined,\\n"
-        "                    paddingBottom:\\n"
-        "                      isNarrowWidth && location.pathname === '/budget'\\n"
-        "                        ? 'calc(110px + env(safe-area-inset-bottom))'\\n"
-        "                        : undefined,\\n"
-        "                    boxSizing: 'border-box',\\n"
-        "                  }}\\n"
-        "                >\\n",
+        "                    position: 'relative',\n"
+        "                  }}\n"
+        "                >\n",
+        "                    position: 'relative',\n"
+        "                    scrollPaddingBottom:\n"
+        "                      isNarrowWidth && location.pathname === '/budget'\n"
+        "                        ? 'calc(120px + env(safe-area-inset-bottom))'\n"
+        "                        : undefined,\n"
+        "                    paddingBottom:\n"
+        "                      isNarrowWidth && location.pathname === '/budget'\n"
+        "                        ? 'calc(110px + env(safe-area-inset-bottom))'\n"
+        "                        : undefined,\n"
+        "                    boxSizing: 'border-box',\n"
+        "                  }}\n"
+        "                >\n",
         "reserve fixed nav clearance in real mobile Budget scroller",
     )
     replace_once(
