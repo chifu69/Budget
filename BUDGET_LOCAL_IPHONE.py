@@ -85,7 +85,7 @@ def remove_once(path: Path, old: str, label: str) -> None:
 def download(url: str, destination: Path, label: str) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     print(f"Descargando {label}...")
-    request = urllib.request.Request(url, headers={"User-Agent": "Budget-Local-iPhone/0.3.25"})
+    request = urllib.request.Request(url, headers={"User-Agent": "Budget-Local-iPhone/0.3.26"})
     with urllib.request.urlopen(request, timeout=180) as response, destination.open("wb") as output:
         while True:
             chunk = response.read(1024 * 1024)
@@ -102,6 +102,19 @@ def fetch_ocr(url: str, destination: Path) -> None:
     if destination.stat().st_size < 1024:
         destination.unlink(missing_ok=True)
         fail(f"Descarga OCR inválida: {url}")
+
+
+def validate_patch_literals() -> None:
+    upstream_slot = "                  {isNarrowWidth && <MobilePageHeaderSlot />}\n"
+    expected_slot = (
+        "                  {isNarrowWidth &&\n"
+        "                    location.pathname !== '/budget' && (\n"
+        "                      <MobilePageHeaderSlot />\n"
+        "                    )}\n"
+    )
+
+    if "\\\\n" in upstream_slot or "\\\\n" in expected_slot:
+        fail("Hay un \\\\n literal en el parche del MobilePageHeaderSlot.")
 
 
 def apply_mod(root: Path) -> None:
@@ -213,11 +226,11 @@ def apply_mod(root: Path) -> None:
     )
     replace_once(
         finances,
-        "                  {isNarrowWidth && <MobilePageHeaderSlot />}\\n",
-        "                  {isNarrowWidth &&\\n"
-        "                    location.pathname !== '/budget' && (\\n"
-        "                      <MobilePageHeaderSlot />\\n"
-        "                    )}\\n",
+        "                  {isNarrowWidth && <MobilePageHeaderSlot />}\n",
+        "                  {isNarrowWidth &&\n"
+        "                    location.pathname !== '/budget' && (\n"
+        "                      <MobilePageHeaderSlot />\n"
+        "                    )}\n",
         "hide mobile header slot on clean Budget",
     )
     replace_once(
@@ -595,6 +608,7 @@ def create_project(destination: Path, archive: Path | None, force: bool) -> None
 
 
 def main() -> None:
+    validate_patch_literals()
     parser = argparse.ArgumentParser(description="Crea Budget Local sobre Actual Budget desde un solo archivo")
     parser.add_argument("--dest", default="actual-budget-local", help="Carpeta destino")
     parser.add_argument("--force", action="store_true", help="Reemplaza la carpeta destino")
