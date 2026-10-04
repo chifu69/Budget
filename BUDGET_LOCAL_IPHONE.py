@@ -92,7 +92,7 @@ def remove_once(path: Path, old: str, label: str) -> None:
 def download(url: str, destination: Path, label: str) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     print(f"Descargando {label}...")
-    request = urllib.request.Request(url, headers={"User-Agent": "Budget-Local-iPhone/0.3.31"})
+    request = urllib.request.Request(url, headers={"User-Agent": "Budget-Local-iPhone/0.3.32"})
     with urllib.request.urlopen(request, timeout=180) as response, destination.open("wb") as output:
         while True:
             chunk = response.read(1024 * 1024)
@@ -567,7 +567,12 @@ def apply_mod(root: Path) -> None:
         if token not in generated_accounts:
             fail("BudgetLocalAccounts.tsx incompleto: " + token)
 
-    for token in ("EXPENSES", "INCOME", "scrollMarginBottom: 170"):
+    for token in (
+        "INCOME",
+        "EXPENSE",
+        "BALANCE",
+        "scrollMarginBottom: 170",
+    ):
         if token not in generated_transactions:
             fail("BudgetLocalTransactions.tsx incompleto: " + token)
 
