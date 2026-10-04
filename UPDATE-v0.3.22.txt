@@ -1,0 +1,43 @@
+Budget Local v0.3.22 — Budget Layout Structural Fix
+
+I reviewed the iPhone screen recording. There were TWO separate layout problems,
+so this update does more than add bottom padding.
+
+TOP OVERLAP FIX
+- The original Actual Budget Titlebar is now hidden only on the custom mobile
+  Budget screen.
+- The clean Budget page owns its own top area.
+- The Budget header is sticky and cannot slide underneath the old titlebar.
+- The page resets the parent Actual scroll position when Budget opens.
+
+BOTTOM / EDITING FIX
+- Budget now has its own 100dvh internal scroll container.
+- It has dedicated bottom safe-area clearance.
+- A final 150px spacer guarantees the last category can scroll above the nav.
+- The floating Smart Add button is hidden on Budget only, matching the clean
+  reference and removing the button that was sitting on top of category rows.
+- Smart Add remains available on the other main screens.
+
+DATA SAFETY
+- No transactions changed.
+- No budgets changed.
+- No categories changed.
+- No subcategories changed.
+- Actual remains the source of truth.
+
+UPLOAD
+Replace:
+  BUDGET_LOCAL_IPHONE.py
+
+The other files are unchanged and included as backup.
+
+DO NOT clear Safari website data and do not uninstall the PWA.
+
+VALIDATION
+- Python generator syntax: PASS
+- Dedicated 100dvh Budget scroller: PASS
+- Parent scroll reset: PASS
+- Sticky clean header: PASS
+- Smart Add hidden on Budget: PASS
+- Original mobile Titlebar hidden on Budget: PASS
+- Changed TSX parse checks: PASS
