@@ -85,7 +85,7 @@ def remove_once(path: Path, old: str, label: str) -> None:
 def download(url: str, destination: Path, label: str) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     print(f"Descargando {label}...")
-    request = urllib.request.Request(url, headers={"User-Agent": "Budget-Local-iPhone/0.3.22"})
+    request = urllib.request.Request(url, headers={"User-Agent": "Budget-Local-iPhone/0.3.23"})
     with urllib.request.urlopen(request, timeout=180) as response, destination.open("wb") as output:
         while True:
             chunk = response.read(1024 * 1024)
@@ -197,7 +197,7 @@ def apply_mod(root: Path) -> None:
         '                      zIndex: 1000,\n'
         '                    }}\n'
         '                  />\n',
-        "                  {!(isNarrowWidth && location.pathname === '/budget') && (\\n"
+        "                  {!(isNarrowWidth && location.pathname === '/budget') && (\n"
         '                    <Titlebar\n'
         '                      style={{\n'
         "                        WebkitAppRegion: 'drag',\n"
@@ -320,6 +320,21 @@ def apply_mod(root: Path) -> None:
     )
 
     nav.write_text(MOBILE_NAV_V2_TSX, encoding="utf-8")
+
+    # Catch malformed FinancesApp JSX before the long Cloudflare build.
+    finances_text = finances.read_text(encoding="utf-8")
+    if "&& (\\\\n                    <Titlebar" in finances_text:
+        fail(
+            "FinancesApp.tsx contiene un salto de línea escapado literal "
+            "dentro de JSX; se aborta antes del build."
+        )
+    if "<BudgetLocalBudget />" not in finances_text:
+        fail("No quedó aplicada la pantalla Budget Local en FinancesApp.tsx.")
+    if (
+        "{!(isNarrowWidth && location.pathname === '/budget') && ("
+        not in finances_text
+    ):
+        fail("No quedó aplicada la protección del Titlebar móvil en Budget.")
 
     primary = root / "packages/desktop-client/src/components/sidebar/PrimaryButtons.tsx"
     replace_once(
